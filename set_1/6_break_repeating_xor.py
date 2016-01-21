@@ -1,7 +1,11 @@
 import langdetect
+import string
 
 def is_plaintext(data):
     return all(32 <= ord(c) <= 126 for c in data)
+
+def xor(in1, in2):
+    return "".join([chr(ord(x) ^ ord(y)) for x, y in zip(in1, in2)])
 
 def hamming(x, y):
     count, z = 0, int(x.encode('hex'),16) ^ int(y.encode('hex'),16)
@@ -75,44 +79,43 @@ def xor_decode(data, charset):
         possible = possible & s
     return list(possible)
 
+
+def xor_histogram_evaluate(data, byte):
+    xored = xor(data, byte * len(data))
+    result = 0
+    for c in xored:
+        if c in 'aeiou':
+            result += 3
+        elif c in string.ascii_lowercase:
+            result += 2
+        elif c in string.printable:
+            result += 2
+        else:
+            result -= 500000
+    return result
+
+"""
+decode stream of bytes xored with the same byte - guessing by histogram
+"""
+def xor_decode2(data):
+    results = []
+    for byte in range(256):
+        results.append((xor_histogram_evaluate(data, chr(byte)), byte))
+    return sorted(results, reverse=True)[0][1]
+        
+
 def default_decrypt(data):
     for iocValue, ioc in get_best_ioc(data):
+        result = []
         streams = split_stream(data, ioc)
-        charset = map(chr, [9, 10, 13] + range(32, 127))
+        #charset = map(chr, [9, 10, 13] + range(32, 127))
         for s in streams:
-            print xor_decode(s, charset)
-        break
+            result.append(xor_decode2(s))
+        key = ''.join(chr(c) for c in result)
+        print result
+        print key
+        print xor(data, key * len(data))
 
 data = open('6_data.txt').read().decode('base64')
 
-default_decrypt([ord(c) for c in data])
-
-print hamming('this is a test', 'wokka wokka!!!')
-
-
-#def xor(a, b):
-#    return ''.join(chr(ord(ac) ^ ord(bc)) for ac, bc in zip(a, b))
-#
-#def get_similarity_to_english(text):
-#    return next((lng.prob for lng in langdetect.detect_langs(text) if lng.lang == 'en'), None)
-#
-#def decrypt_bruteforce(data):
-#    l = len(data)
-#    possible = []
-#    for byte in range(256):
-#        next = xor(data, chr(byte) * l)
-#        if is_plaintext(next):
-#            similarity = get_similarity_to_english(next)
-#            if similarity:
-#                possible.append((similarity, next))
-#
-#    solutions = sorted(possible, reverse=True)
-#    for sln in solutions[:5]:
-#        print sln[0], sln[1]
-
-def main():
-    test_data = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-    print decrypt_bruteforce(test_data.decode('hex')) 
-
-if __name__ == '__main__':
-    main()
+default_decrypt(data)
