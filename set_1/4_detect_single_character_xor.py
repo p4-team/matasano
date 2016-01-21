@@ -23,7 +23,7 @@ def get_valid_score(decrypted):
     if is_plaintext(decrypted):
         return get_similarity_to_english(decrypted)
     else:
-        return 0
+        return None
 
 
 with codecs.open("4.txt", "r") as input_file:
