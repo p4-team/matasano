@@ -77,15 +77,15 @@ def xor_decode(data, charset):
 
 def default_decrypt(data):
     for iocValue, ioc in get_best_ioc(data):
-        print ioc
         streams = split_stream(data, ioc)
         charset = map(chr, [9, 10, 13] + range(32, 127))
         for s in streams:
             print xor_decode(s, charset)
+        break
 
 data = open('6_data.txt').read().decode('base64')
 
-default_decrypt(data)
+default_decrypt([ord(c) for c in data])
 
 print hamming('this is a test', 'wokka wokka!!!')
 
