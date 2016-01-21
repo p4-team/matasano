@@ -2,7 +2,7 @@ import langdetect
 import string
 
 def is_plaintext(data):
-    return all(32 <= ord(c) <= 126 for c in data)
+    return all(32 <= ord(c) <= 126 or c in '\r\n\t' for c in data)
 
 def xor(in1, in2):
     return "".join([chr(ord(x) ^ ord(y)) for x, y in zip(in1, in2)])
@@ -51,7 +51,7 @@ def make_sources(charset):
 """
 get ordered array of best IoCs for data
 """
-def get_best_ioc(data, upper=20):
+def get_best_ioc(data, upper=40):
     result = []
     for i in range(1, upper):
         result.append((ioc(data, i), i))
@@ -74,22 +74,23 @@ decode stream of bytes xored with the same byte
 def xor_decode(data, charset):
     possible = set(charset)
     sources = make_sources(charset)
+    data = [ord(c) for c in data]
     for d in data:
         s = sources[d]
         possible = possible & s
-    return list(possible)
+    return list(possible)[0]
 
 
 def xor_histogram_evaluate(data, byte):
+    letter_order = 'etaoinshrdlcumwfgypbvkjxqz'
     xored = xor(data, byte * len(data))
     result = 0
     for c in xored:
-        if c in 'aeiou':
-            result += 3
-        elif c in string.ascii_lowercase:
-            result += 2
+        cc = c.lower()
+        if cc in letter_order:
+            result += 10 + len(letter_order) - letter_order.index(cc)
         elif c in string.printable:
-            result += 2
+            result += 10
         else:
             result -= 500000
     return result
@@ -108,13 +109,14 @@ def default_decrypt(data):
     for iocValue, ioc in get_best_ioc(data):
         result = []
         streams = split_stream(data, ioc)
-        #charset = map(chr, [9, 10, 13] + range(32, 127))
+        charset = map(chr, [9, 10, 13] + range(32, 127))
         for s in streams:
             result.append(xor_decode2(s))
         key = ''.join(chr(c) for c in result)
-        print result
-        print key
+        # print result
+        # print key
         print xor(data, key * len(data))
+        break
 
 data = open('6_data.txt').read().decode('base64')
 
