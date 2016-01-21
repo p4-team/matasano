@@ -42,7 +42,7 @@ def make_sources(charset):
         for b in charset:
             if (b < a):
                 continue
-            x = ord(a) ^ ord(b)
+            x = chr(ord(a) ^ ord(b))
             if x not in s:
                 s[x] = set()
             s[x] = set([a, b]) | s[x]
@@ -71,21 +71,22 @@ def split_stream(data, by):
 """
 decode stream of bytes xored with the same byte
 """
-def xor_decode(data, charset):
+def xor_decode_with_charset(data, charset):
     possible = set(charset)
     sources = make_sources(charset)
-    data = [ord(c) for c in data]
     for d in data:
         s = sources[d]
         possible = possible & s
     return list(possible)[0]
 
 
-def xor_histogram_evaluate(data, byte):
+"""
+evaluate how good text 'looks like'. the more the better.
+"""
+def histogram_evaluate(text):
     letter_order = 'etaoinshrdlcumwfgypbvkjxqz'
-    xored = xor(data, byte * len(data))
     result = 0
-    for c in xored:
+    for c in text:
         cc = c.lower()
         if cc in letter_order:
             result += 10 + len(letter_order) - letter_order.index(cc)
@@ -95,27 +96,28 @@ def xor_histogram_evaluate(data, byte):
             result -= 500000
     return result
 
+
 """
 decode stream of bytes xored with the same byte - guessing by histogram
 """
-def xor_decode2(data):
+def xor_decode_with_histogram(data):
     results = []
     for byte in range(256):
-        results.append((xor_histogram_evaluate(data, chr(byte)), byte))
+        xored = xor(data, chr(byte) * len(data))
+        results.append((histogram_evaluate(xored), chr(byte)))
     return sorted(results, reverse=True)[0][1]
         
 
 def default_decrypt(data):
     for iocValue, ioc in get_best_ioc(data):
-        result = []
+        result = ""
         streams = split_stream(data, ioc)
-        charset = map(chr, [9, 10, 13] + range(32, 127))
+        #charset = map(chr, [9, 10, 13] + range(32, 127))
         for s in streams:
-            result.append(xor_decode2(s))
-        key = ''.join(chr(c) for c in result)
-        # print result
+            result += xor_decode_with_histogram(s)
+            # result += xor_decode_with_charset(s, charset)
         # print key
-        print xor(data, key * len(data))
+        print xor(data, result * len(data))
         break
 
 data = open('6_data.txt').read().decode('base64')
