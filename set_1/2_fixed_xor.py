@@ -1,5 +1,5 @@
 def xor(in1, in2):
-    return "".join([chr(ord(x[0]) ^ ord(x[1])) for x in zip(in1, in2)])
+    return "".join([chr(ord(x) ^ ord(y)) for x, y in zip(in1, in2)])
 
 
 def main():
