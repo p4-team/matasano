@@ -10,10 +10,12 @@ def decrypt(line):
 
 
 def is_plaintext(data):
-    return all(32 <= ord(c) <= 126 for c in data)
+    return all(32 <= ord(c) <= 126 or c in '\r\n\t' for c in data)
 
 
 def get_similarity_to_english(text):
+    if ' ' not in text:
+        return 0
     return next((lng for lng in langdetect.detect_langs(text) if lng.lang == 'en'), None)
 
 
@@ -33,5 +35,5 @@ with codecs.open("4.txt", "r") as input_file:
                 matching.append((valid_score, decrypted))
 
     solutions = sorted(matching, key=lambda x: x[0], reverse=True)
-    for solution, score in solutions[:5]:
+    for solution, score in solutions[:200]:
         print solution, score
