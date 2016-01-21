@@ -10,7 +10,7 @@ def decrypt(line):
 
 
 def is_plaintext(data):
-    return all(32 <= ord(c) <= 126 for c in data)
+    return all(32 <= ord(c) <= 126 or c in '\r\n\t' for c in data)
 
 
 def get_similarity_to_english(text):
@@ -21,7 +21,7 @@ def get_valid_score(decrypted):
     if is_plaintext(decrypted):
         return get_similarity_to_english(decrypted)
     else:
-        return 0
+        return None
 
 
 with codecs.open("4.txt", "r") as input_file:
