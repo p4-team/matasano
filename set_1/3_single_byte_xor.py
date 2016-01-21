@@ -7,7 +7,7 @@ def xor(a, b):
     return ''.join(chr(ord(ac) ^ ord(bc)) for ac, bc in zip(a, b))
 
 def get_similarity_to_english(text):
-    return next((lng for lng in langdetect.detect_langs(next) if lng.lang == 'en'), None)
+    return next((lng for lng in langdetect.detect_langs(text) if lng.lang == 'en'), None)
 
 def decrypt_bruteforce(data):
     l = len(data)
