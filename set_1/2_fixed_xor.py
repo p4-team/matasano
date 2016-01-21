@@ -1,9 +1,5 @@
-def to_int(x):
-    return int(x.encode("hex"), 16)
-
-
 def xor(in1, in2):
-    return "".join([format(to_int(x[0]) ^ to_int(x[1]), "x") for x in zip(in1, in2)])
+    return "".join([format(ord(x[0]) ^ ord(x[1]), "x") for x in zip(in1, in2)])
 
 
 def main():
