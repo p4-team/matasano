@@ -6,15 +6,19 @@ def is_plaintext(data):
 def xor(a, b):
     return ''.join(chr(ord(ac) ^ ord(bc)) for ac, bc in zip(a, b))
 
+def get_similarity_to_english(text):
+    return next((lng for lng in langdetect.detect_langs(next) if lng.lang == 'en'), None)
+
 def decrypt_bruteforce(data):
     l = len(data)
     possible = []
     for b in range(256):
         next = xor(data, chr(b) * l)
         if is_plaintext(next):
-            langs = [lng for lng in langdetect.detect_langs(next) if lng.lang == 'en']
-            if langs:
-                possible.append([next, max(lng.prob for lng in langs)])
+            similarity = get_similarity_to_english(next)
+            if similarity:
+                possible.append([next, similarity])
+
     solutions = sorted(possible, key=lambda x: x[1], reverse=True)
     for sln in solutions[:5]:
         print sln[1], sln[0]
